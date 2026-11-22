@@ -16,6 +16,20 @@ const ort = windows ? "onnxruntime.dll" : "libonnxruntime.dylib";
 if (!existsSync(path.join(root, ort))) throw new Error(`Missing ${ort}`);
 if (process.platform === "darwin" && process.arch === "x64")
   assertIntelLibrary(path.join(root, ort));
+if (process.platform === "darwin" && process.arch === "x64") {
+  const result = spawnSync(
+    "python3",
+    [
+      "-c",
+      "import ctypes,sys; lib=ctypes.CDLL(sys.argv[1]); lib.OrtGetApiBase.restype=ctypes.c_void_p; api=lib.OrtGetApiBase(); funcs=ctypes.cast(api,ctypes.POINTER(ctypes.c_void_p)); version=ctypes.CFUNCTYPE(ctypes.c_char_p)(funcs[1])().decode(); assert version==sys.argv[2], version",
+      path.join(root, ort),
+      ortVersion,
+    ],
+    { encoding: "utf8" },
+  );
+  if (result.error || result.status !== 0)
+    throw new Error(`Intel ONNX Runtime cannot load: ${result.stderr}`);
+}
 for (const tool of ["ffmpeg", "ffprobe"]) {
   const result = spawnSync(path.join(root, tool + (windows ? ".exe" : "")), ["-version"], {
     encoding: "utf8",
@@ -40,4 +54,12 @@ if (process.platform === "darwin" && process.arch === "arm64") {
     throw new Error("Packaged ONNX Runtime differs from the verified WebGPU runtime");
   }
 }
+
+const license = spawnSync(path.join(root, "ffmpeg"), ["-L"], { encoding: "utf8" });
+if (
+  license.status !== 0 ||
+  /nonfree parts|not legally redistributable/i.test(license.stdout + license.stderr)
+)
+  throw new Error("Refusing a non-redistributable media runtime");
+
 console.log(`Native runtime verified for ${process.platform}/${process.arch}`);

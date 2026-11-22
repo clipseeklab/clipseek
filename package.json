@@ -25,6 +25,7 @@
     "quality:rust": "node scripts/quality/check.mjs rust",
     "quality": "npm run quality:check && npm run test:typecheck && npm run test:frontend && npm run build && npm run quality:rust",
     "runtime:prepare": "node scripts/prepare-runtime.mjs",
+    "runtime:build": "node scripts/build-runtime.mjs",
     "desktop": "npm run runtime:prepare && tauri dev",
     "desktop:build": "npm run runtime:prepare && tauri build",
     "test:e2e": "node scripts/e2e/run.mjs",

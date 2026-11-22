@@ -1,21 +1,12 @@
 import { spawnSync } from "node:child_process";
-import {
-  mkdir,
-  readFile,
-  copyFile,
-  readdir,
-  writeFile,
-  chmod,
-} from "node:fs/promises";
+import { mkdir, readFile, copyFile, readdir, writeFile, chmod } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 
 export const mediaVersion = "8.1.2";
-const checksum =
-  "464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c";
-const sourceUrl =
-  "https://deb.debian.org/debian/pool/main/f/ffmpeg/ffmpeg_8.1.2.orig.tar.xz";
+const checksum = "464beb5e7bf0c311e68b45ae2f04e9cc2af88851abb4082231742a74d97b524c";
+const sourceUrl = "https://deb.debian.org/debian/pool/main/f/ffmpeg/ffmpeg_8.1.2.orig.tar.xz";
 const flags = [
   "--disable-autodetect",
   "--disable-everything",
@@ -44,13 +35,15 @@ const run = (cmd, args, cwd) => {
   if (result.error || result.status !== 0)
     throw new Error(`Command failed: ${cmd}: ${result.error ?? result.status}`);
 };
-export async function prepareMedia(root, output) {
+export async function prepareMedia(root, output, { arch = process.arch } = {}) {
+  const cross = process.platform === "darwin" && arch !== process.arch;
   const desiredFlags = [
     ...flags,
+    ...(cross ? ["--enable-cross-compile", "--target-os=darwin", "--arch=x86_64"] : []),
     ...(process.platform === "darwin"
       ? [
-          "--extra-cflags=-mmacosx-version-min=14.0",
-          "--extra-ldflags=-mmacosx-version-min=14.0",
+          `--extra-cflags=${cross ? "-arch x86_64 " : ""}-mmacosx-version-min=14.0`,
+          `--extra-ldflags=${cross ? "-arch x86_64 " : ""}-mmacosx-version-min=14.0`,
         ]
       : process.platform === "win32"
         ? ["--extra-ldflags=-static"]
@@ -61,16 +54,13 @@ export async function prepareMedia(root, output) {
     encoding: "utf8",
   });
   const provenance = path.join(output, "media-build.json");
-  if (
-    existing.status === 0 &&
-    existing.stdout.includes(`ffmpeg version ${mediaVersion}`)
-  ) {
+  if (existing.status === 0 && existing.stdout.includes(`ffmpeg version ${mediaVersion}`)) {
     try {
       const metadata = JSON.parse(await readFile(provenance, "utf8"));
       if (
         metadata.sha256 === checksum &&
         metadata.platform === process.platform &&
-        metadata.arch === process.arch &&
+        metadata.arch === arch &&
         JSON.stringify(metadata.flags) === JSON.stringify(desiredFlags)
       )
         return;
@@ -111,9 +101,7 @@ export async function prepareMedia(root, output) {
       root,
     );
     if (!(await verified()))
-      throw new Error(
-        "FFmpeg source SHA-256 mismatch. Remove .cache archive and retry.",
-      );
+      throw new Error("FFmpeg source SHA-256 mismatch. Remove .cache archive and retry.");
   }
   const source = path.join(cache, `ffmpeg-${mediaVersion}`);
   try {
@@ -131,12 +119,7 @@ export async function prepareMedia(root, output) {
   run("sh", ["./configure", ...desiredFlags], source);
   run(
     "make",
-    [
-      "-j",
-      String(Math.min(os.availableParallelism(), 8)),
-      "ffmpeg" + ext,
-      "ffprobe" + ext,
-    ],
+    ["-j", String(Math.min(os.availableParallelism(), 8)), "ffmpeg" + ext, "ffprobe" + ext],
     source,
   );
   for (const name of ["ffmpeg", "ffprobe"]) {
@@ -145,27 +128,23 @@ export async function prepareMedia(root, output) {
     if (process.platform !== "win32") await chmod(target, 0o755);
   }
   for (const name of ["COPYING.LGPLv2.1", "COPYING.LGPLv3", "LICENSE.md"])
-    await copyFile(
-      path.join(source, name),
-      path.join(output, `ffmpeg-${name}`),
-    );
+    await copyFile(path.join(source, name), path.join(output, `ffmpeg-${name}`));
   const metadata = {
     version: mediaVersion,
     sourceUrl,
     sha256: checksum,
     flags: desiredFlags,
     platform: process.platform,
-    arch: process.arch,
+    arch,
   };
   await writeFile(provenance, JSON.stringify(metadata, null, 2));
+  if (cross) return; // The target runner verifies execution and license output.
   const license = spawnSync(path.join(output, "ffmpeg" + ext), ["-L"], {
     encoding: "utf8",
   });
   if (
     license.status !== 0 ||
-    /nonfree parts|not legally redistributable/i.test(
-      license.stdout + license.stderr,
-    )
+    /nonfree parts|not legally redistributable/i.test(license.stdout + license.stderr)
   )
     throw new Error("Refusing a non-redistributable media runtime");
 }

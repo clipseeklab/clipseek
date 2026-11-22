@@ -231,3 +231,27 @@ test("Windows packaging includes the four runtime DLLs at the executable directo
   assert.match(prepare, /14\.44\.35211\.0/);
   assert(!prepare.includes("debug_nonredist"));
 });
+
+test("installer jobs only prepare checksum-pinned prebuilt native dependencies", async () => {
+  const workflow = parse(await readFile(".github/workflows/installers.yml", "utf8"));
+  const steps = workflow.jobs.build.steps;
+  const download = steps.find((step) => step.run === "npm run runtime:prepare");
+  assert(download);
+  assert.equal(download.env.GH_TOKEN, "${{ github.token }}");
+  for (const step of steps)
+    assert.doesNotMatch(
+      step.run ?? "",
+      /runtime:build|build-ort|build-media|brew install|cmake --build/,
+    );
+  const prepare = await readFile("scripts/prepare-runtime.mjs", "utf8");
+  assert.match(prepare, /preparePrebuiltRuntime/);
+  assert.doesNotMatch(prepare, /prepareIntelOrt|prepareMedia|build-ort|build-media/);
+  const manifest = JSON.parse(await readFile("scripts/runtime-manifest.json", "utf8"));
+  assert.match(manifest.tag, /^runtime-/);
+  assert(!manifest.tag.startsWith("v"));
+  assert.deepEqual(Object.keys(manifest.artifacts).sort(), ["arm64", "x64"]);
+  for (const arch of ["arm64", "x64"]) {
+    assert.equal(manifest.artifacts[arch].file, `clipseek-runtime-macos-${arch}.tgz`);
+    assert.match(manifest.artifacts[arch].sha256, /^[a-f0-9]{64}$/);
+  }
+});

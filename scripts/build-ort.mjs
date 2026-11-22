@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
 import { createHash } from "node:crypto";
 
 export const ortVersion = "1.30.0";
@@ -12,6 +13,16 @@ export const ortSource = Object.freeze({
   url: "http://distcache.freebsd.org/ports-distfiles/onnxruntime/microsoft-onnxruntime-v1.30.0_GH0.tar.gz",
   sha256: "f6681ecbddf53898adf0cc9e8e9e84657485b84d2eca3c8aa353de6d7dd417ef",
 });
+
+export function canonicalDependencyUrls(text) {
+  return text.replace(
+    /https:\/\/github\.com\/([^/]+)\/([^/]+)\/archive\/([^;\s]+?)\.(zip|tar\.gz)/g,
+    (_, owner, repository, reference, format) => {
+      const revision = /^[a-f0-9]{40}\//.test(reference) ? reference.split("/")[0] : reference;
+      return `https://codeload.github.com/${owner}/${repository}/${format}/${revision}`;
+    },
+  );
+}
 
 export function assertIntelLibrary(file) {
   const result = spawnSync("lipo", ["-archs", file], { encoding: "utf8" });
@@ -86,6 +97,8 @@ export async function prepareIntelOrt(root, sourceArtifact = ortSource) {
   run("tar", ["-xzf", archive, "--strip-components=1", "-C", source]);
   const version = (await readFile(path.join(source, "VERSION_NUMBER"), "utf8")).trim();
   if (version !== ortVersion) throw new Error(`Unexpected ONNX Runtime source version: ${version}`);
+  const dependencies = path.join(source, "cmake", "deps.txt");
+  await writeFile(dependencies, canonicalDependencyUrls(await readFile(dependencies, "utf8")));
   run(
     "bash",
     [
@@ -96,14 +109,19 @@ export async function prepareIntelOrt(root, sourceArtifact = ortSource) {
       build,
       "--build_shared_lib",
       "--parallel",
-      "2",
+      String(Math.min(os.availableParallelism(), 8)),
+      "--osx_arch",
+      "x86_64",
       "--skip_tests",
+      "--no_telemetry",
       "--skip_submodule_sync",
       "--compile_no_warning_as_error",
       "--cmake_extra_defines",
       "CMAKE_OSX_ARCHITECTURES=x86_64",
       "CMAKE_OSX_DEPLOYMENT_TARGET=14.0",
       "onnxruntime_BUILD_UNIT_TESTS=OFF",
+      `CMAKE_C_FLAGS=-ffile-prefix-map=${root}=.`,
+      `CMAKE_CXX_FLAGS=-ffile-prefix-map=${root}=.`,
     ],
     source,
   );

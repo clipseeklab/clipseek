@@ -20,7 +20,7 @@ The interface defaults to English; Chinese is available in settings. Change prec
 
 ## Development
 
-Install Node.js 22.18+, Rust, and [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/). Native media builds also need a C/C++ compiler, make, pkg-config, and zlib; use Xcode command line tools on macOS or MSYS2/MinGW on Windows.
+Install Node.js 22.18+, Rust, and [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/).
 
 ```sh
 git clone https://github.com/clipseeklab/clipseek.git
@@ -29,7 +29,7 @@ npm ci
 npm run desktop
 ```
 
-The first run prepares native dependencies. Use `npm run desktop:build` to build locally, or follow the [installer guide](docs/releases.md) for on-demand macOS Apple Silicon / Intel GitHub Actions builds. Windows packaging is currently disabled. Ordinary commits do not trigger installer builds.
+The first run downloads checksum-pinned macOS native dependencies. For private repositories, use an authenticated GitHub CLI with `CLIPSEEK_RUNTIME_USE_GH=1`. Use `npm run desktop:build` to build locally, or follow the [installer guide](docs/releases.md) for on-demand macOS Apple Silicon / Intel GitHub Actions builds. Windows packaging is currently disabled. Ordinary commits do not trigger installer builds.
 
 ## Contributing
 

@@ -91,15 +91,11 @@ jobs:
           path: |
             runtime
             .cache
-          key: runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json', 'scripts/build-media.mjs', 'scripts/prepare-runtime.mjs', 'scripts/build-ort.mjs') }}
+          key: runtime-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json', 'scripts/runtime-manifest.json', 'scripts/prebuilt-runtime.mjs') }}
       - run: npm ci
-      - name: Install macOS media build dependencies
-        run: |
-          brew list pkgconf > /dev/null 2>&1 || brew install pkgconf
-          if [ "$BUILD_ARCH" = x64 ]; then
-            brew list cmake > /dev/null 2>&1 || brew install cmake
-          fi
-      - name: Prepare macOS media and inference runtimes
+      - name: Download and verify prebuilt native runtimes
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: npm run runtime:prepare
       - run: node scripts/ci/verify-runtime.mjs
       - name: Run native desktop E2E

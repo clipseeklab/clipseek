@@ -17,7 +17,7 @@ English is the default for the application, README, changelog, contributor instr
 
 ## Resources and privacy
 
-Models use `q8`, `q4`, and `fp32` subdirectories under the app-managed directory or `CLIPSTUDIO_MODELS`. Native dependencies live under `runtime`; `npm run runtime:prepare` builds them from public sources. Do not depend on the original project's resource repository. Never commit model weights, native runtimes, libraries, personal media, logs, credentials, or build artifacts. Use generated fixtures or clearly attributed public samples.
+Models use `q8`, `q4`, and `fp32` subdirectories under the app-managed directory or `CLIPSTUDIO_MODELS`. Native dependencies live under `runtime`; `npm run runtime:prepare` downloads the pinned dependency Release and verifies archive digests, versions, and Mach-O architectures. CI must never fall back to building native dependencies from source. `npm run runtime:build` is an explicit local maintenance task. Do not depend on the original project's resource repository. Never commit model weights, native runtimes, libraries, personal media, logs, credentials, or build artifacts. Use generated fixtures or clearly attributed public samples.
 
 ## Architecture
 

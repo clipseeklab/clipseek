@@ -11,6 +11,6 @@
 - Optional authenticated MCP interface sharing desktop search and library services.
 - English-first interface and documentation, with Chinese translations.
 - On-demand macOS ARM64/Intel installer builds; version tags create Release drafts.
-- Build the missing Intel ONNX Runtime from checksum-verified upstream sources cached by FreeBSD; reject tampered archives and incorrect architectures.
+- Pin independently published native dependency archives; installer jobs download and validate runtimes without compiling ONNX Runtime or FFmpeg.
 
 Retains ClipSeek's interface, state management, library sessions, and search infrastructure in an independent project. Online downloads, trimming, subtitles, activation, plugins, telemetry, and automatic updates are excluded.

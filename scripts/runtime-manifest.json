@@ -1,0 +1,16 @@
+{
+  "repository": "clipseeklab/clipseek",
+  "tag": "runtime-onnx1.30.0-ffmpeg8.1.2-r1",
+  "onnxruntime": "1.30.0",
+  "ffmpeg": "8.1.2",
+  "artifacts": {
+    "arm64": {
+      "file": "clipseek-runtime-macos-arm64.tgz",
+      "sha256": "cd3a14ced707692c9267e7cd97b1a74f8de3d5fd464a2ef256439c6c938d1d12"
+    },
+    "x64": {
+      "file": "clipseek-runtime-macos-x64.tgz",
+      "sha256": "fc8187a544f1b92088254db6c5530726d73aa7fbb0851543789e2a9d633ae448"
+    }
+  }
+}

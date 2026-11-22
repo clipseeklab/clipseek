@@ -20,7 +20,7 @@
 
 ## 本地开发
 
-安装 Node.js 22.18+、Rust 和 [Tauri 2 开发依赖](https://v2.tauri.app/start/prerequisites/)。编译媒体运行时还需要 C/C++ 编译器、make、pkg-config 和 zlib；macOS 使用 Xcode 命令行工具，Windows 使用 MSYS2/MinGW。
+安装 Node.js 22.18+、Rust 和 [Tauri 2 开发依赖](https://v2.tauri.app/start/prerequisites/)。
 
 ```sh
 git clone https://github.com/clipseeklab/clipseek.git
@@ -29,7 +29,7 @@ npm ci
 npm run desktop
 ```
 
-首次运行会准备原生依赖。本地打包使用 `npm run desktop:build`；GitHub Actions 当前仅构建 macOS Apple Silicon / Intel 安装包，Windows 打包暂不启用，详见[安装包指南](docs/releases.md)。普通提交不会触发安装包构建。
+首次运行会下载并校验预构建的 macOS 原生依赖；私有仓库需先登录 GitHub CLI，并设置 `CLIPSEEK_RUNTIME_USE_GH=1`。本地打包使用 `npm run desktop:build`；GitHub Actions 当前仅构建 macOS Apple Silicon / Intel 安装包，Windows 打包暂不启用，详见[安装包指南](docs/releases.md)。普通提交不会触发安装包构建。
 
 ## 参与贡献
 
