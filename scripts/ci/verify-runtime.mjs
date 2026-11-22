@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
+import { assertIntelLibrary, ortVersion } from "../build-ort.mjs";
 
 if (process.platform !== process.env.BUILD_PLATFORM || process.arch !== process.env.BUILD_ARCH) {
   throw new Error(`Runner ${process.platform}/${process.arch} does not match the installer target`);
@@ -9,9 +10,12 @@ const root = path.resolve("runtime");
 const info = JSON.parse(readFileSync(path.join(root, "versions.json"), "utf8"));
 if (info.platform !== process.platform || info.arch !== process.arch)
   throw new Error("Runtime architecture mismatch");
+if (info.onnxruntime !== ortVersion) throw new Error("ONNX Runtime version mismatch");
 const windows = process.platform === "win32";
 const ort = windows ? "onnxruntime.dll" : "libonnxruntime.dylib";
 if (!existsSync(path.join(root, ort))) throw new Error(`Missing ${ort}`);
+if (process.platform === "darwin" && process.arch === "x64")
+  assertIntelLibrary(path.join(root, ort));
 for (const tool of ["ffmpeg", "ffprobe"]) {
   const result = spawnSync(path.join(root, tool + (windows ? ".exe" : "")), ["-version"], {
     encoding: "utf8",

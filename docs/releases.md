@@ -29,3 +29,5 @@ CI uses Node.js 24 and Rust 1.99.0. Public dependencies provide ONNX Runtime and
 Actions are pinned. Build jobs have read-only permissions; the draft-release job uses GitHub's short-lived token with contents write access. No personal token or SSH key is needed. Installers are currently unsigned and macOS packages are not notarized.
 
 Run a manual cloud build and inspect each installer before tagging a release. Local checks do not verify hosted builds or Intel Mac installation. Workflow and packaging contracts are covered by `npm run test:quality`.
+
+Intel macOS builds compile ONNX Runtime 1.30.0 from the official source tag because the npm package omits x64 binaries. Apple Silicon uses the bundled 1.30.0 library. Runtime preparation checks the Intel Mach-O architecture; its build cache is separate from ARM64. The first Intel build takes longer.
