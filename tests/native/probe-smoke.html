@@ -1,0 +1,8 @@
+<!doctype html>
+<html><body><script>
+window.run = () => window.webkit.messageHandlers.result.postMessage({
+  visibility: document.visibilityState,
+  width: innerWidth,
+  height: innerHeight,
+});
+</script></body></html>

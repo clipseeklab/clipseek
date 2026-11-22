@@ -1,0 +1,136 @@
+[package]
+name = "clipstudio-open"
+version = "0.1.0"
+description = "ClipSeek Open - local photo and video semantic search"
+authors = ["hidaxia.com"]
+edition = "2021"
+
+[lib]
+# Keep library and binary names distinct to avoid Windows linker conflicts; only rlib is
+# needed.
+# The unused staticlib/cdylib outputs would add two expensive release links.
+name = "clip_studio_lib"
+crate-type = ["rlib"]
+
+[features]
+default = []
+e2e = ["dep:tauri-plugin-wdio", "dep:tauri-plugin-wdio-webdriver"]
+
+
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+rmcp = { version = "3.3.0", features = ["transport-streamable-http-server"] }
+libloading = "0.9"
+memmap2 = "0.9"
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-wdio = { version = "=1.4.0", optional = true }
+tauri-plugin-wdio-webdriver = { version = "=1.4.0", optional = true }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-single-instance = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Storage.
+rusqlite = { version = "0.37", features = ["bundled"] }
+
+# Media processing.
+image = "0.25"
+ffmpeg-sidecar = { version = "2.5", default-features = false }
+kamadak-exif = "0.6.2"
+
+# Shared encoder interface; platform execution features are selected below.
+# The shared API baseline is 19; runtime preparation supplies the pinned ONNX Runtime 1.30.
+# macOS packages require macOS 14 or later, including Intel builds.
+ort = { version = "2.0.0-rc.13", default-features = false, features = [
+    "std",
+    "ndarray",
+    "tracing",
+    "tls-native",
+    "load-dynamic",
+    "api-19",
+] }
+ndarray = "0.17"
+tokenizers = { version = "0.22", default-features = false, features = ["onig"] }
+
+# Vector search through embedded Qdrant Edge shards.
+qdrant-edge = "0.8"
+ordered-float = "5"
+
+# Import pipeline.
+blake3 = "1"
+walkdir = "2"
+fs2 = "0.4"
+
+# Infrastructure.
+thiserror = "2"
+uuid = { version = "1", features = ["v4", "v7"] }
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "fs", "time", "macros", "net", "io-util"] }
+tracing = "0.1"
+sysinfo = { version = "0.39", default-features = false, features = ["system"] }
+base64 = "0.22"
+hex = "0.4"
+rand = "0.9"
+tokio-util = { version = "0.7", features = ["io"] }
+axum = "0.8"
+tower = { version = "0.5", features = ["util"] }
+schemars = "1"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls", "system-proxy"] }
+sha2 = "0.10"
+sha1 = "0.10"
+anyhow = "1"
+percent-encoding = "2"
+futures-core = "0.3"
+resvg = "0.48.1"
+roxmltree = "0.21.1"
+regex = "1"
+unicode-normalization = "0.1"
+unicode-segmentation = "1"
+encoding_rs = "0.8"
+tempfile = "3.27.0"
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+zip = { version = "4", default-features = false, features = ["deflate"] }
+chardetng = "1.0"
+
+[dev-dependencies]
+# Integration tests use a mock AppHandle with a real MCP HTTP server.
+tauri = { version = "2", features = ["test"] }
+
+# Volume detection, including network-volume restrictions.
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.30", default-features = false, features = ["fs", "mount"] }
+
+[target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
+half = "2.7"
+ort = { version = "2.0.0-rc.13", default-features = false, features = ["webgpu"] }
+
+[target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
+ort = { version = "2.0.0-rc.13", default-features = false, features = ["directml"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+windows-sys = { version = "0.59", features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
+winreg = "0.55"
+
+[profile.release]
+# ONNX inference runs in bundled libraries; full LTO and one codegen unit slow packaging.
+# Keep Cargo's parallel code generation, release optimizations, and symbol stripping.
+strip = true
+
+# Full dependency DWARF can grow Tauri development artifacts to tens of GiB.
+# Keep line-level application debug information and omit dependency debug information.
+# This reduces persistent target/debug/deps disk usage while retaining useful backtraces.
+[profile.dev]
+debug = 1
+
+[profile.dev.package."*"]
+debug = 0
+
+[profile.test]
+debug = 1
+
+[profile.test.package."*"]
+debug = 0

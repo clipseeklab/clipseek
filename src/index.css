@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Neutral shadcn/ui theme with light and dark modes. */
+:root {
+  color-scheme: light;
+  --background: 0 0% 100%;
+  --foreground: 0 0% 9%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 9%;
+  --primary: 0 0% 13%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 0 0% 13%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 45%;
+  --accent: 0 0% 96%;
+  --accent-foreground: 0 0% 13%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 90%;
+  --input: 0 0% 90%;
+  --ring: 0 0% 64%;
+  --radius: 0.625rem;
+  --scrollbar-thumb: 0 0% 58%;
+  --scrollbar-thumb-hover: 0 0% 48%;
+  --scrollbar-thumb-active: 0 0% 38%;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: 0 0% 9%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 13%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 13%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 90%;
+  --primary-foreground: 0 0% 13%;
+  --secondary: 0 0% 20%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 20%;
+  --muted-foreground: 0 0% 64%;
+  --accent: 0 0% 20%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 20%;
+  --input: 0 0% 24%;
+  --ring: 0 0% 45%;
+  --scrollbar-thumb: 0 0% 42%;
+  --scrollbar-thumb-hover: 0 0% 52%;
+  --scrollbar-thumb-active: 0 0% 62%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Keep native wheel, keyboard and drag behavior; let high contrast use OS controls. */
+  @media (forced-colors: none) {
+    @supports selector(::-webkit-scrollbar) {
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+
+      ::-webkit-scrollbar-track,
+      ::-webkit-scrollbar-corner {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        min-width: 32px;
+        min-height: 32px;
+        border: 2px solid transparent;
+        border-radius: 999px;
+        background: hsl(var(--scrollbar-thumb));
+        background-clip: padding-box;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: hsl(var(--scrollbar-thumb-hover));
+      }
+
+      ::-webkit-scrollbar-thumb:active {
+        background-color: hsl(var(--scrollbar-thumb-active));
+      }
+
+      ::-webkit-scrollbar-button {
+        display: none;
+        width: 0;
+        height: 0;
+      }
+    }
+
+    /* Non-auto standard scrollbar properties override WebKit thumb styling. */
+    @supports not selector(::-webkit-scrollbar) {
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: hsl(var(--scrollbar-thumb)) transparent;
+      }
+    }
+  }
+
+  /* Reserve space for macOS traffic lights and the sidebar toggle after the sidebar collapses. */
+  [data-sidebar-hidden="true"] main [data-page-toolbar],
+  [data-sidebar-hidden="true"] main > div > div > header,
+  [data-sidebar-hidden="true"] main > div > header {
+    padding-left: 9rem !important;
+  }
+
+  .windows-app [data-sidebar-hidden="true"] main [data-page-toolbar],
+  .windows-app [data-sidebar-hidden="true"] main > div > div > header,
+  .windows-app [data-sidebar-hidden="true"] main > div > header {
+    padding-left: 1.5rem !important;
+  }
+
+  .windows-app .sidebar-library-row {
+    height: 52px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .windows-app [data-page-toolbar] {
+    min-height: 52px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .windows-app [data-page-toolbar] > [class~="h-16"] {
+    height: 52px;
+  }
+
+  .windows-app [data-page-toolbar] h1,
+  .windows-app .search-top-spacer {
+    display: none;
+  }
+}
+
+@layer components {
+  .window-control {
+    display: flex;
+    width: 46px;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    color: hsl(var(--foreground));
+  }
+
+  .window-control:hover {
+    background: hsl(var(--accent));
+  }
+
+  .window-control:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: -3px;
+  }
+
+  .window-control-close:hover {
+    background: #e81123;
+    color: white;
+  }
+}
+
+/* Sidebar shortcut changes: animate only presence, leaving initial/library loads quiet. */
+.sidebar-folder-row {
+  overflow: hidden;
+}
+.sidebar-folder-row[data-phase="enter"] {
+  animation: sidebar-folder-enter 180ms ease-out both;
+}
+.sidebar-folder-row[data-phase="exit"] {
+  pointer-events: none;
+  animation: sidebar-folder-exit 180ms ease-in both;
+}
+@keyframes sidebar-folder-enter {
+  from {
+    max-height: 0;
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    max-height: 3rem;
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes sidebar-folder-exit {
+  from {
+    max-height: 3rem;
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-folder-row[data-phase="enter"],
+  .sidebar-folder-row[data-phase="exit"] {
+    animation: none;
+  }
+  .sidebar-folder-row[data-phase="exit"] {
+    display: none;
+  }
+}

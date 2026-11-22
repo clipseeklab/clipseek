@@ -1,0 +1,10 @@
+{
+  "bundle": {
+    "resources": {
+      "../.local/windows-runtime/MSVCP140.dll": "MSVCP140.dll",
+      "../.local/windows-runtime/MSVCP140_1.dll": "MSVCP140_1.dll",
+      "../.local/windows-runtime/VCRUNTIME140.dll": "VCRUNTIME140.dll",
+      "../.local/windows-runtime/VCRUNTIME140_1.dll": "VCRUNTIME140_1.dll"
+    }
+  }
+}

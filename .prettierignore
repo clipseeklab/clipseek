@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+ci-artifacts/
+src-tauri/target/
+src-tauri/gen/
+package-lock.json
+qa/

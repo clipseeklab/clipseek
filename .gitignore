@@ -1,0 +1,111 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node
+node_modules
+dist
+dist-ssr
+.vite/
+coverage/
+ci-artifacts/
+*.local
+.env*
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Rust
+src-tauri/target/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.zcode
+
+# Large model files and bundled binaries are prepared by scripts, not committed.
+src-tauri/resources/models/
+
+# Large test datasets stay local.
+pic-data/
+video-data/
+pic-data.jsonl
+gui-test-screenshots/
+
+# Local plaintext credentials must never be committed.
+.claudeflare
+.ssh
+
+# macOS
+*.dmg
+
+
+design
+qa-media
+# Local test documents and generated artifacts.
+qa/
+marketing
+docs/microsoft-store-assets
+docs/product-assets
+
+# Standalone local-only resources
+runtime/
+.local/
+models/
+artifacts/
+*.onnx
+*.onnx_data
+rustc-ice-*.txt
+
+# Local credentials and runtime library data
+.cache/
+*.pem
+*.key
+*.p12
+*.pfx
+id_ed25519*
+id_rsa*
+credentials*.json
+service-account*.json
+mcp-token*
+mcp-audit.jsonl
+/config.json
+/config.json.tmp
+.clipstudio-open/
+open-library.json
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+
+# Local media samples and diagnostic exports
+*.mp4
+*.mov
+*.MOV
+*.mkv
+*.avi
+*.webm
+*.zip
+
+# Generated CoreML packages contain learned weights; only data-free templates are source.
+*.mlpackage/
+*.mlmodelc/
+weight.bin
+weights.bin
+body-weights.bin

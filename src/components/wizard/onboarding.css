@@ -1,0 +1,55 @@
+.onboarding-slide {
+  animation: onboarding-reveal 420ms ease-out both;
+}
+.onboarding-demo {
+  min-height: 250px;
+}
+.onboarding-result {
+  animation: onboarding-reveal 600ms ease-out both;
+}
+.onboarding-query {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: onboarding-query 1.5s steps(12, end) both;
+}
+.onboarding-playhead {
+  animation: onboarding-scan 6s ease-in-out infinite;
+}
+.onboarding-showcase[data-paused="true"] .onboarding-playhead {
+  animation-play-state: paused;
+}
+@keyframes onboarding-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes onboarding-query {
+  from {
+    max-width: 0;
+  }
+  to {
+    max-width: 100%;
+  }
+}
+@keyframes onboarding-scan {
+  0%,
+  10% {
+    left: 12%;
+  }
+  85%,
+  100% {
+    left: 88%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-showcase *,
+  .onboarding-showcase {
+    animation: none !important;
+    transition: none !important;
+  }
+}
