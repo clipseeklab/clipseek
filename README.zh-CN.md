@@ -22,7 +22,7 @@
 <p align="center"><a href="#下载-010">下载</a> · <a href="#主要功能">主要功能</a> · <a href="#运行要求">运行要求</a> · <a href="#参与贡献">参与贡献</a></p>
 
 <p align="center">
-  <img src="docs/screenshots/library.png" alt="ClipSeek Open 素材库界面，包含太空照片与短视频">
+  <img src="docs/screenshots/library-macos.png" alt="ClipSeek Open 素材库界面，包含太空照片与短视频">
 </p>
 
 ## 主要功能
@@ -58,7 +58,7 @@
 
 ## 软件截图
 
-![使用自然语言搜索行星与星云的结果](docs/screenshots/search.png)
+![使用自然语言搜索行星与星云的结果](docs/screenshots/search-macos.png)
 
 演示素材包括 NASA 图像和生成的太空插图，详见[素材来源](THIRD_PARTY_NOTICES.md#documentation-demo-media)。
 

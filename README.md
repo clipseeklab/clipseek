@@ -22,7 +22,7 @@
 <p align="center"><a href="#download-010">Download</a> · <a href="#features">Features</a> · <a href="#system-requirements">System requirements</a> · <a href="#contributing">Contributing</a></p>
 
 <p align="center">
-  <img src="docs/screenshots/library.png" alt="ClipSeek Open library with space photos and short videos">
+  <img src="docs/screenshots/library-macos.png" alt="ClipSeek Open library with space photos and short videos">
 </p>
 
 ## Features
@@ -58,7 +58,7 @@ Apple Silicon and Windows 10 have been tested on physical devices. Intel macOS i
 
 ## Screenshots
 
-![Natural-language search results for planets and bright nebulae](docs/screenshots/search.png)
+![Natural-language search results for planets and bright nebulae](docs/screenshots/search-macos.png)
 
 The demo library uses NASA imagery and generated space illustrations. See the [media credits](THIRD_PARTY_NOTICES.md#documentation-demo-media).
 
