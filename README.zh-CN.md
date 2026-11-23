@@ -1,14 +1,48 @@
 # ClipSeek Open
 
-[English](README.md) · 简体中文
+[English](README.md) · 简体中文 · [官网](https://clipseek.ai)
 
 用自然语言或图片搜索本地照片和视频。素材处理在本机完成，无需账号或云服务。
 
 - 通过文件夹和标签管理素材，原文件保留在原位置。
 - 支持最长 **32 秒**的视频，搜索结果返回完整视频。
 - 使用 EmbeddingGemma 2，默认 **Q8**，可选 Q4 / FP32。
-- Apple Silicon 在 macOS 15+ 使用原生 CoreML GPU，可回退 Metal/CPU；Intel Mac 和 Windows 使用 CPU。
 - 可通过 [MCP 接口](docs/mcp.md)连接 AI 客户端。
+
+## 下载 0.1.0
+
+| 平台                | 安装包                                                                                                                     |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| macOS Apple Silicon | [下载 DMG](https://github.com/clipseeklab/clipseek/releases/download/v0.1.0/ClipSeek-Open_0.1.0_macos-arm64.dmg)           |
+| macOS Intel         | [下载 DMG](https://github.com/clipseeklab/clipseek/releases/download/v0.1.0/ClipSeek-Open_0.1.0_macos-x64.dmg)             |
+| Windows x64         | [下载安装程序](https://github.com/clipseeklab/clipseek/releases/download/v0.1.0/ClipSeek-Open_0.1.0_windows-x64-setup.exe) |
+
+[更新说明与 SHA-256 校验文件](https://github.com/clipseeklab/clipseek/releases/tag/v0.1.0)。安装包暂未签名，macOS 版本尚未公证。
+
+## 软件截图
+
+![用自然语言搜索照片和完整视频](docs/screenshots/search.png)
+
+<details>
+<summary>素材库界面</summary>
+
+![照片与视频素材库](docs/screenshots/library.png)
+
+</details>
+
+演示图片来自 [NASA](THIRD_PARTY_NOTICES.md#documentation-demo-media)，演示视频为基于这些图片生成的短循环。
+
+## 运行要求
+
+| 平台                            | 操作系统                     | 推理方式                                    |
+| ------------------------------- | ---------------------------- | ------------------------------------------- |
+| Apple Silicon（M1 及更新芯片）  | macOS 14+                    | macOS 15+ 使用 CoreML GPU，可回退 Metal/CPU |
+| Intel Mac（64 位）              | macOS 14+                    | CPU                                         |
+| Intel/AMD Windows 电脑（64 位） | Windows 10 22H2 / Windows 11 | CPU                                         |
+
+**Q8 推荐配置：**16 GB 内存、SSD，以及 10 GB 可用空间，用于应用、模型和初始缓存。素材缩略图、索引和其他精度的模型需要额外空间。Q8 模型下载约 540 MB，低内存设备尚未验证。
+
+已在 Apple Silicon 和 Windows 10 真机测试；Intel macOS 已通过 GitHub Actions 测试，仍待 macOS 14+ Intel 真机验证。
 
 ## 开始使用
 
@@ -35,7 +69,7 @@ npm run desktop
 
 欢迎提交 [Issue](https://github.com/clipseeklab/clipseek/issues) 或 Pull Request。开发前请阅读[测试说明](docs/testing.md)、[代码规范](docs/coding-standards.md)和[架构说明](docs/architecture.md)。不要提交密钥、个人素材、素材库、模型或构建产物。
 
-已在 Apple Silicon 和 Windows x64 真机测试；Intel Mac 仍需在 macOS 14+ 上验证安装和运行。精度和性能限制见[推理说明](docs/inference.md)。
+精度和性能限制见[推理说明](docs/inference.md)。
 
 ## 许可证
 
