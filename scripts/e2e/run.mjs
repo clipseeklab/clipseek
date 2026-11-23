@@ -1,16 +1,8 @@
 import { spawnSync } from "node:child_process";
-import {
-  mkdtempSync,
-  mkdirSync,
-  realpathSync,
-  writeFileSync,
-  rmSync,
-  existsSync,
-  copyFileSync,
-} from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, copyFileSync } from "node:fs";
 import os from "node:os";
 import { assertAutomationBinary, freePort } from "./safety.mjs";
-import { automationBinary, npmInvocation, sandboxPath } from "./platform.mjs";
+import { automationBinary, npmInvocation, canonicalSandboxPath } from "./platform.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -32,7 +24,7 @@ if (profile === "models") {
     if (!existsSync(file)) throw new Error(`Missing E2E prerequisite: ${file}`);
   }
 }
-const sandbox = sandboxPath(realpathSync(mkdtempSync(path.join(os.tmpdir(), "clipseek-e2e-"))));
+const sandbox = canonicalSandboxPath(mkdtempSync(path.join(os.tmpdir(), "clipseek-e2e-")));
 const output = path.join(project, ".local/e2e", path.basename(sandbox));
 mkdirSync(output, { recursive: true });
 mkdirSync(path.join(sandbox, "config"));

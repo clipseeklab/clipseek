@@ -1,4 +1,5 @@
 import path from "node:path";
+import { realpathSync } from "node:fs";
 
 export function automationBinary(project, platform = process.platform) {
   if (!["darwin", "win32"].includes(platform))
@@ -20,4 +21,9 @@ export function npmInvocation(args, env = process.env, executable = process.exec
 
 export function sandboxPath(canonicalPath, platform = process.platform) {
   return platform === "win32" ? path.win32.toNamespacedPath(canonicalPath) : canonicalPath;
+}
+
+export function canonicalSandboxPath(input) {
+  // The native API expands Windows 8.3 aliases, matching Rust canonicalize().
+  return sandboxPath(realpathSync.native(input));
 }

@@ -51,7 +51,7 @@ Use the generated fixture contract above (red photo, 2-second video, blue 32-sec
 
 Automation plugins are optional Cargo dependencies behind `e2e`; release builds reject that feature, and normal capabilities exclude automation permissions. `cargo test --manifest-path src-tauri/Cargo.toml --lib --features e2e e2e_isolation -- --test-threads=1` checks fail-closed profile handling without launching a window.
 
-Windows CI also runs frontend tests, Rust library tests, command-boundary and embedding contracts, and the Windows runtime, path, icon, and WebView2 suites. CI smoke tests do not download model weights or claim numerical coverage; the resource-required HEIF and real-Q8 suites are separate hardware tests.
+Windows CI checks sandbox isolation with Windows short-path aliases and also runs frontend tests, Rust library tests, command-boundary and embedding contracts, and the Windows runtime, path, icon, and WebView2 suites. CI smoke tests do not download model weights or claim numerical coverage; the resource-required HEIF and real-Q8 suites are separate hardware tests.
 
 ### Windows numerical benchmarks
 
