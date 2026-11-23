@@ -18,7 +18,7 @@ The application does not bundle model weights, Node.js, a Python environment, or
 
 ## Documentation demo media
 
-README screenshots show an isolated demo library, using NASA images and short video loops generated from them. No personal media or libraries are included. NASA is credited as the image source; no endorsement is implied. See [NASA media usage guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/).
+README screenshots show an isolated demo library with AI-generated space illustrations, NASA photographs, and short video loops made from the NASA imagery. The generated illustrations are demo assets and do not depict documented missions. No personal media or libraries are included. NASA is credited as the image source; no endorsement is implied. See [NASA media usage guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/).
 
 - [Blue Marble 2012](https://images.nasa.gov/details/GSFC_20171208_Archive_e001386): NASA / NOAA / GSFC / Suomi NPP / VIIRS / Norman Kuring.
 - [Earthrise from lunar orbit](https://images.nasa.gov/details/GSFC_20171208_Archive_e000496): NASA / Goddard / Arizona State University.

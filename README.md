@@ -1,10 +1,29 @@
-# ClipSeek Open
+<h1 align="center">ClipSeek Open</h1>
 
-English · [简体中文](README.zh-CN.md)
+<p align="center">
+  <strong>Find photos and short videos with a sentence.</strong><br>
+  An open source desktop app powered by EmbeddingGemma 2. Search by text or reference image, with all media processing on your computer.
+</p>
 
-ClipSeek Open is an open source desktop app powered by **EmbeddingGemma 2** for searching local photos and short videos with natural language or a reference image. Describe a scene, such as “a sunset by the sea” or “a city at night,” to find matching media.
+<p align="center">English · <a href="README.zh-CN.md">简体中文</a></p>
 
-Media analysis and search run on your computer. No account or media upload is required. Internet access is needed for the initial model download.
+<p align="center">
+  <a href="https://github.com/clipseeklab/clipseek/releases/tag/v0.1.0"><img src="https://img.shields.io/badge/release-v0.1.0-6658a8" alt="Release v0.1.0"></a>
+  <a href="#features"><img src="https://img.shields.io/badge/model-EmbeddingGemma%202-445b93" alt="EmbeddingGemma 2"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-367468" alt="Apache 2.0 license"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/clipseeklab/clipseek/releases/download/v0.1.0/ClipSeek-Open_0.1.0_macos-arm64.dmg"><img src="docs/readme/macos-arm64.svg" width="185" alt="Download macOS · Apple Silicon · ARM64"></a>
+  <a href="https://github.com/clipseeklab/clipseek/releases/download/v0.1.0/ClipSeek-Open_0.1.0_macos-x64.dmg"><img src="docs/readme/macos-x64.svg" width="185" alt="Download macOS · Intel · x64"></a>
+  <a href="https://github.com/clipseeklab/clipseek/releases/download/v0.1.0/ClipSeek-Open_0.1.0_windows-x64-setup.exe"><img src="docs/readme/windows-x64.svg" width="185" alt="Download Windows · Intel / AMD · x64"></a>
+</p>
+
+<p align="center"><a href="#download-010">Download</a> · <a href="#features">Features</a> · <a href="#system-requirements">System requirements</a> · <a href="#contributing">Contributing</a></p>
+
+<p align="center">
+  <img src="docs/screenshots/library.png" alt="ClipSeek Open library with space photos and short videos">
+</p>
 
 ## Features
 
@@ -39,16 +58,9 @@ Apple Silicon and Windows 10 have been tested on physical devices. Intel macOS i
 
 ## Screenshots
 
-![Natural-language search across photos and whole videos](docs/screenshots/search.png)
+![Natural-language search results for planets and bright nebulae](docs/screenshots/search.png)
 
-<details>
-<summary>Library view</summary>
-
-![Photo and video library](docs/screenshots/library.png)
-
-</details>
-
-Demo images: [NASA](THIRD_PARTY_NOTICES.md#documentation-demo-media). Demo videos are short loops generated from those images.
+The demo library uses NASA imagery and generated space illustrations. See the [media credits](THIRD_PARTY_NOTICES.md#documentation-demo-media).
 
 ## Getting started
 

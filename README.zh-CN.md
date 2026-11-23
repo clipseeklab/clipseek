@@ -1,10 +1,29 @@
-# ClipSeek Open
+<h1 align="center">ClipSeek Open</h1>
 
-[English](README.md) · 简体中文
+<p align="center">
+  <strong>用一句话找到本地照片和短视频。</strong><br>
+  基于 EmbeddingGemma 2 的开源桌面应用。支持文字和参考图片搜索，素材始终在本机处理。
+</p>
 
-ClipSeek Open 是一款基于 **EmbeddingGemma 2** 的开源桌面素材搜索工具，支持通过自然语言或参考图片检索本地照片和短视频。例如，输入“海边的日落”“夜晚的城市”等描述，即可查找相应素材。
+<p align="center"><a href="README.md">English</a> · 简体中文</p>
 
-素材分析与检索在本机完成，无需上传照片或视频，也不需要注册账号。首次使用需要联网下载模型。
+<p align="center">
+  <a href="https://github.com/clipseeklab/clipseek/releases/tag/v0.1.0"><img src="https://img.shields.io/badge/release-v0.1.0-6658a8" alt="Release v0.1.0"></a>
+  <a href="#主要功能"><img src="https://img.shields.io/badge/model-EmbeddingGemma%202-445b93" alt="EmbeddingGemma 2"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-367468" alt="Apache 2.0 license"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/clipseeklab/clipseek/releases/download/v0.1.0/ClipSeek-Open_0.1.0_macos-arm64.dmg"><img src="docs/readme/macos-arm64.svg" width="185" alt="下载 macOS · Apple Silicon · ARM64"></a>
+  <a href="https://github.com/clipseeklab/clipseek/releases/download/v0.1.0/ClipSeek-Open_0.1.0_macos-x64.dmg"><img src="docs/readme/macos-x64.svg" width="185" alt="下载 macOS · Intel · x64"></a>
+  <a href="https://github.com/clipseeklab/clipseek/releases/download/v0.1.0/ClipSeek-Open_0.1.0_windows-x64-setup.exe"><img src="docs/readme/windows-x64.svg" width="185" alt="下载 Windows · Intel / AMD · x64"></a>
+</p>
+
+<p align="center"><a href="#下载-010">下载</a> · <a href="#主要功能">主要功能</a> · <a href="#运行要求">运行要求</a> · <a href="#参与贡献">参与贡献</a></p>
+
+<p align="center">
+  <img src="docs/screenshots/library.png" alt="ClipSeek Open 素材库界面，包含太空照片与短视频">
+</p>
 
 ## 主要功能
 
@@ -39,16 +58,9 @@ ClipSeek Open 是一款基于 **EmbeddingGemma 2** 的开源桌面素材搜索�
 
 ## 软件截图
 
-![用自然语言搜索照片和完整视频](docs/screenshots/search.png)
+![使用自然语言搜索行星与星云的结果](docs/screenshots/search.png)
 
-<details>
-<summary>素材库界面</summary>
-
-![照片与视频素材库](docs/screenshots/library.png)
-
-</details>
-
-演示图片来自 [NASA](THIRD_PARTY_NOTICES.md#documentation-demo-media)，演示视频为基于这些图片生成的短循环。
+演示素材包括 NASA 图像和生成的太空插图，详见[素材来源](THIRD_PARTY_NOTICES.md#documentation-demo-media)。
 
 ## 开始使用
 
