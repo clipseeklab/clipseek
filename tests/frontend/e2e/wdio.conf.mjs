@@ -1,10 +1,11 @@
 import path from "node:path";
+import { automationBinary } from "../../../scripts/e2e/platform.mjs";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const output = process.env.CLIPSEEK_E2E_OUTPUT;
 if (!process.env.CLIPSEEK_E2E_ROOT || !output) throw new Error("Run E2E through npm run test:e2e");
-const app = path.join(root, "src-tauri/target/debug/clipstudio-open");
+const app = automationBinary(root);
 export const config = {
   runner: "local",
   specs:

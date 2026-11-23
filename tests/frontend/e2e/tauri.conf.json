@@ -27,5 +27,8 @@
   },
   "bundle": {
     "active": false
+  },
+  "build": {
+    "frontendDist": "../dist-e2e"
   }
 }

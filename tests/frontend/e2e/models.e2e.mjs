@@ -2,7 +2,15 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { browser, $, $$ } from "@wdio/globals";
-import { invoke, click, openSettings, closeDialog, importFiles, waitAssets } from "./helpers.mjs";
+import {
+  invoke,
+  click,
+  openSettings,
+  closeDialog,
+  importFiles,
+  waitAssets,
+  current,
+} from "./helpers.mjs";
 
 export function registerModelCases() {
   const fixtures = process.env.CLIPSTUDIO_EMBEDDING_FIXTURES;
@@ -28,10 +36,23 @@ export function registerModelCases() {
     const result = await waitAssets(3);
     assert.deepEqual(result.items.map((asset) => asset.fileName).sort(), names.slice(0, 3).sort());
     assert.equal(result.items.find((asset) => asset.fileName === "limit.mp4").durationMs, 32000);
-    await browser.waitUntil(async () => (await invoke("index_summary")).visual === 3, {
-      timeout: 90000,
-      timeoutMsg: "Real Q8 indexing did not finish",
-    });
+    try {
+      await browser.waitUntil(async () => (await invoke("index_summary")).visual === 3, {
+        timeout: 90000,
+        timeoutMsg: "Real Q8 indexing did not finish",
+      });
+    } catch (error) {
+      const library = await current();
+      console.error("Q8 index state:", await invoke("index_summary"));
+      console.error(
+        "Q8 processing state:",
+        await invoke("processing_list", {
+          libraryId: library.id,
+          filter: {},
+        }),
+      );
+      throw error;
+    }
     const status = await invoke("index_summary");
     assert.equal(status.visualModelReady, true);
     assert.equal(status.tasks.error ?? 0, 0);

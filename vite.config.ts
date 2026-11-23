@@ -11,6 +11,7 @@ export default defineConfig(async () => ({
   cacheDir: "node_modules/.vite/client",
   plugins: [react()],
   build: {
+    outDir: process.env.VITE_E2E === "true" ? "dist-e2e" : "dist",
     // macOS 12 ships a Safari 15-generation WKWebView. Do not emit the newer
     // baseline target used by current Vite releases.
     target: "safari15",
@@ -27,6 +28,8 @@ export default defineConfig(async () => ({
 
   test: {
     environment: "jsdom",
+    // Bound concurrent jsdom trees on Windows without changing test isolation or deadlines.
+    maxWorkers: process.platform === "win32" ? 2 : undefined,
     include: ["tests/frontend/**/*.test.{ts,tsx}"],
     setupFiles: ["./tests/frontend/setup.ts"],
     css: true,

@@ -65,8 +65,12 @@ pub fn session(path: &Path, backend: Backend, profile: Option<&Path>) -> Result<
     if backend == Backend::Coreml {
         bail!("Native CoreML does not use ONNX sessions");
     }
+    // Bound Windows CPU workers alongside the second encoder session and desktop.
+    let maximum_threads = if cfg!(target_os = "windows") { 4 } else { 8 };
     let mut builder = Session::builder()?
-        .with_intra_threads(std::thread::available_parallelism().map_or(4, |n| n.get().min(8)))
+        .with_intra_threads(
+            std::thread::available_parallelism().map_or(4, |n| n.get().min(maximum_threads)),
+        )
         .map_err(|error| anyhow::anyhow!(error.to_string()))?;
     if let Some(profile) = profile {
         builder = builder

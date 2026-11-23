@@ -11,6 +11,11 @@
     "x64": {
       "file": "clipseek-runtime-macos-x64.tgz",
       "sha256": "fc8187a544f1b92088254db6c5530726d73aa7fbb0851543789e2a9d633ae448"
+    },
+    "windows-x64": {
+      "tag": "runtime-windows-onnx1.30.0-ffmpeg8.1.2-heif1.23.5-r1",
+      "file": "clipseek-runtime-windows-x64.tgz",
+      "sha256": "512cfe06d6a0d3ff1b974527ce5f25066518adc45205e8b042859c8e9fa45142"
     }
   }
 }

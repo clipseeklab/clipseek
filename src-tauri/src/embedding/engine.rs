@@ -106,14 +106,15 @@ impl Engine {
             // One model input for the entire <=32-second clip. No persisted frames.
             let count = (duration.floor() as usize).clamp(1, 32);
             let (width, height) = preprocess::target_size(original_width, original_height, 140)?;
+            let mut cache = super::video::FrameCache::default();
             for index in 0..count {
                 if !should_continue() {
                     bail!("Indexing cancelled or configuration changed");
                 }
                 let rgb = media.model_frame(path, index as f64, width, height)?;
-                let patches = preprocess::patchify_resized(&rgb, 140)?;
-                counts.push(patches.soft_tokens);
-                features.extend(self.vision(patches)?);
+                let (values, soft_tokens) = cache.encode(rgb, |patches| self.vision(patches))?;
+                counts.push(soft_tokens);
+                features.extend_from_slice(values);
             }
         } else {
             let rgb = crate::import::thumb::open_image_smart(path)?.to_rgb8();

@@ -25,7 +25,13 @@ fn invoke(
             cmd: "model_settings".into(),
             callback: CallbackFn(0),
             error: CallbackFn(1),
-            url: "tauri://localhost".parse().unwrap(),
+            url: if cfg!(windows) {
+                "http://tauri.localhost"
+            } else {
+                "tauri://localhost"
+            }
+            .parse()
+            .unwrap(),
             body: InvokeBody::Json(json!({"precision":precision,"modelDirectory":root})),
             headers: Default::default(),
             invoke_key: INVOKE_KEY.into(),

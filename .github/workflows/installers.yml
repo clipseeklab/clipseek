@@ -1,5 +1,5 @@
 name: Build installers
-run-name: macOS installers · ${{ github.ref_name }}
+run-name: Desktop installers · ${{ github.ref_name }}
 
 on:
   workflow_dispatch: {}
@@ -64,6 +64,7 @@ jobs:
       BUILD_PLATFORM: ${{ matrix.platform }}
       BUILD_ARCH: ${{ matrix.arch }}
       BUILD_TARGET: ${{ matrix.target }}
+      BUILD_BUNDLES: ${{ matrix.bundles }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -98,12 +99,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: npm run runtime:prepare
       - run: node scripts/ci/verify-runtime.mjs
+      - name: Test frontend on Windows
+        if: matrix.platform == 'win32'
+        run: npm test
+      - name: Test Windows Rust units and platform contracts
+        if: matrix.platform == 'win32'
+        run: >-
+          cargo test --locked --manifest-path src-tauri/Cargo.toml
+          --lib --test command_boundary --test embedding_contract
+          --test windows_runtime --test windows_runtime_boundaries
+          --test windows_config_path --test windows_library_path
+          --test windows_folder_icon --test windows_vector_long_path
+          --test windows_webview2 -- --test-threads=2
       - name: Run native desktop E2E
         run: npm run test:e2e
       - name: Remove installers left in the dependency cache
         run: node -e "require('node:fs').rmSync(require('node:path').join('src-tauri','target',process.env.BUILD_TARGET,'release','bundle'),{recursive:true,force:true})"
-      - name: Build macOS installer
-        run: npx tauri build --ci --target "$BUILD_TARGET" --bundles dmg -- --locked
+      - name: Build native installer
+        run: npx tauri build --ci --target "$BUILD_TARGET" --bundles "$BUILD_BUNDLES" -- --locked
       - name: Collect only the installer and checksum
         run: node scripts/ci/collect-installers.mjs
       - name: Upload test installers

@@ -181,7 +181,7 @@ pub fn install_library_folder_icon(root: &Path) -> AppResult<()> {
     const FILE_ATTRIBUTE_READONLY: u32 = 0x1;
     const FILE_ATTRIBUTE_HIDDEN: u32 = 0x2;
     const FILE_ATTRIBUTE_SYSTEM: u32 = 0x4;
-    const INI: &str = "[.ShellClassInfo]\r\nIconFile=.clipstudio\\library-folder.ico\r\nIconIndex=0\r\nConfirmFileOp=0\r\nClipSeekFolderIcon=1\r\n";
+    const INI: &str = "[.ShellClassInfo]\r\nIconFile=.clipstudio-open\\library-folder.ico\r\nIconIndex=0\r\nConfirmFileOp=0\r\nClipSeekFolderIcon=1\r\n";
 
     let icon_path = root.join(".clipstudio-open/library-folder.ico");
     let ini_path = root.join("desktop.ini");

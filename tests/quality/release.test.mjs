@@ -78,7 +78,17 @@ test("manual builds select platforms and cannot publish, including manual runs o
   assert.deepEqual(plan.matrix.include.map((item) => item.arch).sort(), ["arm64", "x64"]);
   assert.equal(plan.matrix.include.length, 2);
   assert(plan.matrix.include.every((target) => target.platform === "darwin"));
-  assert.throws(() => buildPlan(root, { INPUT_PLATFORM: "windows" }), /Unknown platform/);
+  const windows = buildPlan(root, { INPUT_PLATFORM: "windows" }).matrix.include;
+  assert.equal(windows.length, 1);
+  assert.deepEqual(windows[0], {
+    id: "windows-x64",
+    os: "windows-2025",
+    platform: "win32",
+    arch: "x64",
+    target: "x86_64-pc-windows-msvc",
+    bundles: "nsis",
+  });
+  assert.equal(buildPlan(root, {}).matrix.include.length, 3);
   await assert.rejects(
     publishRelease(root, { ...releaseEnv, GITHUB_EVENT_NAME: "workflow_dispatch" }),
     /Only a version-tag push/,
@@ -88,7 +98,7 @@ test("tag builds require the exact version and build every supported target", as
   const root = await fixture(t);
   assert.equal(
     buildPlan(root, { ...releaseEnv, INPUT_PLATFORM: "windows" }).matrix.include.length,
-    2,
+    3,
   );
   assert.throws(
     () => buildPlan(root, { ...releaseEnv, GITHUB_REF_NAME: "v0.2.0" }),
@@ -127,13 +137,13 @@ test("version validation rejects shell payloads and malformed numeric prerelease
     assert.throws(() => projectVersion(root), /valid semantic version/);
   }
 });
-test("collector accepts one installer, names it by target, and verifies both installers and their checksums", async (t) => {
+test("collector accepts one installer, names it by target, and verifies every installer and its checksum", async (t) => {
   const root = await fixture(t);
   await installers(root);
   const files = await verifyAssets(root, "0.1.0");
-  assert.equal(files.length, 4);
+  assert.equal(files.length, 6);
   assert(files.some((file) => file.endsWith("macos-x64.dmg")));
-  assert(!files.some((file) => file.endsWith(".exe")));
+  assert(files.some((file) => file.endsWith("windows-x64-setup.exe")));
   assert(files.some((file) => file.endsWith("macos-arm64.dmg")));
 });
 test("collector rejects ambiguous or empty package output", async (t) => {
@@ -198,9 +208,18 @@ test("installer workflow only runs manually or for version tags and pins action 
   assert.deepEqual(workflow.on.push, { tags: ["v*"] });
   assert.deepEqual(workflow.on.workflow_dispatch, {});
   const steps = Object.values(workflow.jobs).flatMap((job) => job.steps);
-  assert(
-    !steps.some((step) => /Windows|msys2|nsis|prepare-windows-runtime/i.test(JSON.stringify(step))),
+  const windowsTests = steps.find(
+    (step) => step.name === "Test Windows Rust units and platform contracts",
   );
+  assert.equal(windowsTests.if, "matrix.platform == 'win32'");
+  for (const suite of [
+    "command_boundary",
+    "embedding_contract",
+    "windows_runtime_boundaries",
+    "windows_vector_long_path",
+  ])
+    assert(windowsTests.run.includes(`--test ${suite}`));
+  assert.match(windowsTests.run, /--lib/);
   assert.equal(workflow.permissions.contents, "read");
   assert.equal(workflow.jobs.release.permissions.contents, "write");
   assert.match(workflow.jobs.release.if, /github.event_name == 'push'/);
@@ -208,8 +227,12 @@ test("installer workflow only runs manually or for version tags and pins action 
   assert.equal(workflow.jobs.build.strategy["fail-fast"], false);
   const buildSteps = workflow.jobs.build.steps;
   const e2e = buildSteps.findIndex((step) => step.run === "npm run test:e2e");
-  const packaging = buildSteps.findIndex((step) => step.name === "Build macOS installer");
+  const packaging = buildSteps.findIndex((step) => step.name === "Build native installer");
   assert(e2e >= 0 && e2e < packaging, "Native E2E must pass before installer packaging");
+  assert.equal(buildSteps[e2e].if, undefined, "Every platform must run native E2E");
+  assert.match(buildSteps[packaging].run, /--bundles "\$BUILD_BUNDLES"/);
+  assert.equal(workflow.jobs.build.env.BUILD_BUNDLES, "${{ matrix.bundles }}");
+  assert(buildSteps.indexOf(windowsTests) < packaging);
   const actions = Object.values(workflow.jobs)
     .flatMap((job) => job.steps)
     .filter((step) => step.uses);
@@ -225,11 +248,43 @@ test("Windows packaging includes the four runtime DLLs at the executable directo
   const rust = await readFile("src-tauri/src/windows_runtime.rs", "utf8");
   const expected = [...rust.matchAll(/"([A-Z0-9_]+\.dll)"/g)].map((match) => match[1]);
   assert.equal(expected.length, 4);
-  assert.deepEqual(Object.values(config.bundle.resources).sort(), expected.sort());
+  assert.deepEqual(
+    Object.values(config.bundle.resources)
+      .filter((name) => !name.startsWith("licenses/"))
+      .sort(),
+    expected.sort(),
+  );
   const prepare = await readFile("scripts/ci/prepare-windows-runtime.ps1", "utf8");
   assert.match(prepare, /VC\/Redist\/MSVC/);
   assert.match(prepare, /14\.44\.35211\.0/);
   assert(!prepare.includes("debug_nonredist"));
+});
+
+test("Windows desktop builds deploy provider dependencies and CRT beside the executable", async () => {
+  const config = JSON.parse(await readFile("src-tauri/tauri.windows.conf.json", "utf8"));
+  const expected = [
+    "MSVCP140.dll",
+    "MSVCP140_1.dll",
+    "VCRUNTIME140.dll",
+    "VCRUNTIME140_1.dll",
+    "DirectML.dll",
+    "dxcompiler.dll",
+    "dxil.dll",
+    "heif-decoder.exe",
+    "heif.dll",
+    "libde265.dll",
+  ];
+  assert.deepEqual(
+    Object.values(config.bundle.resources)
+      .filter((name) => !name.startsWith("licenses/"))
+      .sort(),
+    expected.sort(),
+  );
+  for (const name of expected)
+    assert.equal(config.bundle.resources[`../.local/windows-runtime/${name}`], name);
+  assert.deepEqual(config.bundle.targets, ["nsis"]);
+  assert.equal(config.app.windows[0].decorations, false);
+  assert.equal(config.bundle.windows.webviewInstallMode.type, "downloadBootstrapper");
 });
 
 test("installer jobs only prepare checksum-pinned prebuilt native dependencies", async () => {
@@ -249,7 +304,11 @@ test("installer jobs only prepare checksum-pinned prebuilt native dependencies",
   const manifest = JSON.parse(await readFile("scripts/runtime-manifest.json", "utf8"));
   assert.match(manifest.tag, /^runtime-/);
   assert(!manifest.tag.startsWith("v"));
-  assert.deepEqual(Object.keys(manifest.artifacts).sort(), ["arm64", "x64"]);
+  assert.deepEqual(Object.keys(manifest.artifacts).sort(), ["arm64", "windows-x64", "x64"]);
+  const windows = manifest.artifacts["windows-x64"];
+  assert.match(windows.tag, /^runtime-windows-/);
+  assert.equal(windows.file, "clipseek-runtime-windows-x64.tgz");
+  assert.match(windows.sha256, /^[a-f0-9]{64}$/);
   for (const arch of ["arm64", "x64"]) {
     assert.equal(manifest.artifacts[arch].file, `clipseek-runtime-macos-${arch}.tgz`);
     assert.match(manifest.artifacts[arch].sha256, /^[a-f0-9]{64}$/);

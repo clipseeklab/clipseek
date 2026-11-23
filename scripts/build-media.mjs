@@ -27,7 +27,6 @@ const flags = [
   "--enable-muxer=image2pipe",
   "--enable-filter=scale,format,transpose,hflip,vflip,buffer,buffersink,null",
   "--enable-swscale",
-  "--enable-pthreads",
   "--enable-zlib",
 ];
 const run = (cmd, args, cwd) => {
@@ -39,6 +38,7 @@ export async function prepareMedia(root, output, { arch = process.arch } = {}) {
   const cross = process.platform === "darwin" && arch !== process.arch;
   const desiredFlags = [
     ...flags,
+    process.platform === "win32" ? "--enable-w32threads" : "--enable-pthreads",
     ...(cross ? ["--enable-cross-compile", "--target-os=darwin", "--arch=x86_64"] : []),
     ...(process.platform === "darwin"
       ? [
@@ -107,7 +107,7 @@ export async function prepareMedia(root, output, { arch = process.arch } = {}) {
   try {
     await readdir(source);
   } catch {
-    run("tar", ["-xf", archive, "-C", cache], root);
+    run("tar", ["-xf", path.relative(root, archive), "-C", path.relative(root, cache)], root);
   }
   // Windows: run with MSYS2 make/gcc/sh/tar/curl on PATH. macOS: Xcode CLI tools.
   try {

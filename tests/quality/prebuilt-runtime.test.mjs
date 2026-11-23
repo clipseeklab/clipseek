@@ -7,37 +7,52 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { preparePrebuiltRuntime, assertMachO } from "../../scripts/prebuilt-runtime.mjs";
+import {
+  preparePrebuiltRuntime,
+  assertMachO,
+  assertPE,
+  windowsRuntimeDlls,
+  windowsAppLocalFiles,
+} from "../../scripts/prebuilt-runtime.mjs";
 
-async function fixture(t, { cpu = 0x1000007, extra = false, version = "1.30.0" } = {}) {
+async function fixture(
+  t,
+  { cpu = 0x1000007, extra = false, version = "1.30.0", platform = "darwin" } = {},
+) {
   const base = await mkdtemp(path.join(tmpdir(), "clipseek-prebuilt-"));
   t.after(() => rm(base, { recursive: true, force: true }));
   const stage = path.join(base, "stage");
   await mkdir(stage);
-  const header = Buffer.alloc(32);
-  header.writeUInt32LE(0xfeedfacf, 0);
-  header.writeUInt32LE(cpu, 4);
-  for (const name of ["ffmpeg", "ffprobe", "libonnxruntime.dylib"])
-    await writeFile(path.join(stage, name), header);
+  const windows = platform === "win32";
+  const header = Buffer.alloc(windows ? 128 : 32);
+  if (windows) {
+    header.writeUInt16LE(0x5a4d, 0);
+    header.writeUInt32LE(64, 0x3c);
+    header.writeUInt32LE(0x4550, 64);
+    header.writeUInt16LE(0x8664, 68);
+  } else {
+    header.writeUInt32LE(0xfeedfacf, 0);
+    header.writeUInt32LE(cpu, 4);
+  }
+  const binaries = windows
+    ? ["ffmpeg.exe", "ffprobe.exe", "heif-decoder.exe", ...windowsRuntimeDlls]
+    : ["ffmpeg", "ffprobe", "libonnxruntime.dylib"];
+  for (const name of binaries) await writeFile(path.join(stage, name), header);
   await writeFile(
     path.join(stage, "versions.json"),
     JSON.stringify({
-      platform: "darwin",
+      platform,
       arch: "x64",
       onnxruntime: version,
       ffmpeg: "8.1.2",
       ffprobe: "8.1.2",
     }),
   );
+  const licenses = windows ? ["heif-libheif-COPYING", "heif-libde265-COPYING"] : [];
+  for (const name of licenses) await writeFile(path.join(stage, name), "synthetic license");
   if (extra) await writeFile(path.join(stage, "unexpected.txt"), "not a runtime");
   const archive = path.join(base, "source.tgz");
-  const files = [
-    "ffmpeg",
-    "ffprobe",
-    "libonnxruntime.dylib",
-    "versions.json",
-    ...(extra ? ["unexpected.txt"] : []),
-  ];
+  const files = [...binaries, ...licenses, "versions.json", ...(extra ? ["unexpected.txt"] : [])];
   assert.equal(
     spawnSync("tar", ["-czf", archive, "-C", stage, ...files], {
       env: { ...process.env, COPYFILE_DISABLE: "1" },
@@ -49,8 +64,8 @@ async function fixture(t, { cpu = 0x1000007, extra = false, version = "1.30.0" }
     onnxruntime: "1.30.0",
     ffmpeg: "8.1.2",
     artifacts: {
-      x64: {
-        file: "clipseek-runtime-macos-x64.tgz",
+      [windows ? "windows-x64" : "x64"]: {
+        file: `clipseek-runtime-${windows ? "windows" : "macos"}-x64.tgz`,
         sha256: createHash("sha256")
           .update(await readFile(archive))
           .digest("hex"),
@@ -61,7 +76,7 @@ async function fixture(t, { cpu = 0x1000007, extra = false, version = "1.30.0" }
   let downloads = 0;
   const run = (overrides = {}) =>
     preparePrebuiltRuntime(root, {
-      platform: "darwin",
+      platform,
       arch: "x64",
       manifest,
       downloadArtifact: async (_, destination) => {
@@ -113,7 +128,7 @@ test("unexpected archive files are rejected", async (t) => {
 
 test("unsupported platforms have no build fallback", async (t) => {
   const f = await fixture(t);
-  await assert.rejects(f.run({ platform: "win32" }), /No prebuilt runtime/);
+  await assert.rejects(f.run({ platform: "linux" }), /No prebuilt runtime/);
   assert.equal(f.downloads(), 0);
 });
 
@@ -137,4 +152,45 @@ test("runtime archives cannot extract symbolic links", async (t) => {
     /regular files only/,
   );
   await assert.rejects(access(path.join(f.root, "runtime")));
+});
+
+test("Windows archives validate PE headers for the executable tools and every DLL", async (t) => {
+  const f = await fixture(t, { platform: "win32" });
+  await f.run();
+  for (const name of ["ffmpeg.exe", "ffprobe.exe", "heif-decoder.exe", ...windowsRuntimeDlls])
+    assertPE(await readFile(path.join(f.root, "runtime", name)), "x64");
+  assert.equal(f.downloads(), 1);
+  for (const name of windowsAppLocalFiles) {
+    assert.deepEqual(
+      await readFile(path.join(f.root, ".local/windows-runtime", name)),
+      await readFile(path.join(f.root, "runtime", name)),
+    );
+  }
+});
+
+test("PE validation rejects truncated headers, invalid offsets and another architecture", () => {
+  assert.throws(() => assertPE(Buffer.alloc(3), "x64"), /PE architecture mismatch/);
+  const bytes = Buffer.alloc(128);
+  bytes.writeUInt16LE(0x5a4d);
+  bytes.writeUInt32LE(0xffffffff, 0x3c);
+  assert.throws(() => assertPE(bytes, "x64"), /PE architecture mismatch/);
+  bytes.writeUInt32LE(64, 0x3c);
+  bytes.writeUInt32LE(0x4550, 64);
+  bytes.writeUInt16LE(0xaa64, 68);
+  assert.throws(() => assertPE(bytes, "x64"), /PE architecture mismatch/);
+});
+
+test("native maintenance entry points refuse CI before preparing any dependencies", () => {
+  for (const script of [
+    "build-runtime.mjs",
+    "build-windows-runtime.mjs",
+    "package-windows-runtime.mjs",
+  ]) {
+    const result = spawnSync(process.execPath, [path.join("scripts", script), "x64"], {
+      env: { ...process.env, CI: "1" },
+      encoding: "utf8",
+    });
+    assert.notEqual(result.status, 0, script);
+    assert.match(result.stderr, /local.*maintenance/i, script);
+  }
 });

@@ -10,13 +10,13 @@ import {
 } from "node:fs";
 import os from "node:os";
 import { assertAutomationBinary, freePort } from "./safety.mjs";
+import { automationBinary, npmInvocation, sandboxPath } from "./platform.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const project = fileURLToPath(new URL("../../", import.meta.url));
 const profile = process.argv[2] ?? "smoke";
-if (process.platform !== "darwin")
-  throw new Error("Native E2E is currently verified on macOS only");
+const binary = automationBinary(project);
 if (!["smoke", "models"].includes(profile)) throw new Error("Use smoke or models E2E profile");
 const models = process.env.CLIPSTUDIO_MODELS;
 const fixtures = process.env.CLIPSTUDIO_EMBEDDING_FIXTURES;
@@ -32,7 +32,7 @@ if (profile === "models") {
     if (!existsSync(file)) throw new Error(`Missing E2E prerequisite: ${file}`);
   }
 }
-const sandbox = realpathSync(mkdtempSync(path.join(os.tmpdir(), "clipseek-e2e-")));
+const sandbox = sandboxPath(realpathSync(mkdtempSync(path.join(os.tmpdir(), "clipseek-e2e-"))));
 const output = path.join(project, ".local/e2e", path.basename(sandbox));
 mkdirSync(output, { recursive: true });
 mkdirSync(path.join(sandbox, "config"));
@@ -64,10 +64,11 @@ const env = {
   TAURI_WEBDRIVER_PORT: String(await freePort()),
 };
 const phases = [];
-function run(command, args) {
-  if (args.includes("wdio"))
-    assertAutomationBinary(path.join(project, "src-tauri/target/debug/clipstudio-open"));
-  const result = spawnSync(command, args, { cwd: project, env, stdio: "inherit" });
+function run(args) {
+  const invocation = npmInvocation(args);
+  const command = invocation.command;
+  if (args.includes("wdio")) assertAutomationBinary(binary);
+  const result = spawnSync(command, invocation.args, { cwd: project, env, stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.signal) throw new Error(`${command} terminated by ${result.signal}`);
   const status = result.status ?? 1;
@@ -82,7 +83,7 @@ try {
   code =
     process.env.CLIPSEEK_E2E_SKIP_BUILD === "1"
       ? 0
-      : run("npm", [
+      : run([
           "exec",
           "--",
           "tauri",
@@ -95,15 +96,15 @@ try {
           "tests/frontend/e2e/tauri.conf.json",
         ]);
   if (code === 0) {
-    assertAutomationBinary(path.join(project, "src-tauri/target/debug/clipstudio-open"));
-    code = run("npm", ["exec", "--", "wdio", "run", "tests/frontend/e2e/wdio.conf.mjs"]);
+    assertAutomationBinary(binary);
+    code = run(["exec", "--", "wdio", "run", "tests/frontend/e2e/wdio.conf.mjs"]);
     if (code === 0) {
       env.CLIPSEEK_E2E_PHASE = "journey";
-      code = run("npm", ["exec", "--", "wdio", "run", "tests/frontend/e2e/wdio.conf.mjs"]);
+      code = run(["exec", "--", "wdio", "run", "tests/frontend/e2e/wdio.conf.mjs"]);
     }
     if (code === 0) {
       env.CLIPSEEK_E2E_PHASE = "restart";
-      code = run("npm", ["exec", "--", "wdio", "run", "tests/frontend/e2e/wdio.conf.mjs"]);
+      code = run(["exec", "--", "wdio", "run", "tests/frontend/e2e/wdio.conf.mjs"]);
     }
   }
 } catch (error) {

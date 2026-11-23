@@ -29,13 +29,13 @@ npm ci
 npm run desktop
 ```
 
-首次运行会下载并校验预构建的 macOS 原生依赖；私有仓库需先登录 GitHub CLI，并设置 `CLIPSEEK_RUNTIME_USE_GH=1`。本地打包使用 `npm run desktop:build`；GitHub Actions 当前仅构建 macOS Apple Silicon / Intel 安装包，Windows 打包暂不启用，详见[安装包指南](docs/releases.md)。普通提交不会触发安装包构建。
+首次运行会下载并校验预构建的 macOS 或 Windows x64 原生依赖；私有仓库需先登录 GitHub CLI，并设置 `CLIPSEEK_RUNTIME_USE_GH=1`。本地打包使用 `npm run desktop:build`；GitHub Actions 支持构建 macOS Apple Silicon / Intel 和 Windows x64 安装包，详见[安装包指南](docs/releases.md)。普通提交不会触发安装包构建。
 
 ## 参与贡献
 
 欢迎提交 [Issue](https://github.com/clipseeklab/clipseek/issues) 或 Pull Request。开发前请阅读[测试说明](docs/testing.md)、[代码规范](docs/coding-standards.md)和[架构说明](docs/architecture.md)。不要提交密钥、个人素材、素材库、模型或构建产物。
 
-已在 Apple Silicon 本机测试；Intel Mac 和 Windows 仍需安装包及实机验证。精度和性能限制见[推理说明](docs/inference.md)。
+已在 Apple Silicon 和 Windows x64 真机测试；Intel Mac 仍需在 macOS 14+ 上验证安装和运行。精度和性能限制见[推理说明](docs/inference.md)。
 
 ## 许可证
 

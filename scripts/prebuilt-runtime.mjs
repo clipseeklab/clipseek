@@ -5,9 +5,41 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const manifestPath = fileURLToPath(new URL("./runtime-manifest.json", import.meta.url));
+const tarCommand =
+  process.platform === "win32"
+    ? path.join(process.env.SystemRoot ?? "C:/Windows", "System32/tar.exe")
+    : "tar";
+
 const binaries = ["ffmpeg", "ffprobe", "libonnxruntime.dylib"];
+export const windowsRuntimeDlls = [
+  "onnxruntime.dll",
+  "heif.dll",
+  "libde265.dll",
+  "DirectML.dll",
+  "dxcompiler.dll",
+  "dxil.dll",
+  "MSVCP140.dll",
+  "MSVCP140_1.dll",
+  "VCRUNTIME140.dll",
+  "VCRUNTIME140_1.dll",
+];
+export const windowsAppLocalFiles = [
+  ...windowsRuntimeDlls.filter((name) => name !== "onnxruntime.dll"),
+  "heif-decoder.exe",
+  "heif-libheif-COPYING",
+  "heif-libde265-COPYING",
+];
+
+export async function stageWindowsAppLocalFiles(root) {
+  // NSIS deduplicates resource source paths. Use distinct copies for app-local DLLs.
+  const output = path.join(root, ".local/windows-runtime");
+  await mkdir(output, { recursive: true });
+  for (const name of windowsAppLocalFiles)
+    await cp(path.join(root, "runtime", name), path.join(output, name));
+}
+
 export const runtimeFilePattern =
-  /^(ffmpeg|ffprobe|libonnxruntime\.dylib|versions\.json|media-build\.json|provenance\.json|(?:ffmpeg|onnxruntime)-[A-Za-z0-9._-]+)$/;
+  /^(ffmpeg(?:\.exe)?|ffprobe(?:\.exe)?|heif-decoder\.exe|heif(?:-lib(?:heif|de265)-COPYING|\.dll)|libde265\.dll|onnxruntime\.dll|DirectML\.dll|dxcompiler\.dll|dxil\.dll|MSVCP140(?:_1)?\.dll|VCRUNTIME140(?:_1)?\.dll|libonnxruntime\.dylib|versions\.json|media-build\.json|provenance\.json|(?:ffmpeg|onnxruntime)-[A-Za-z0-9._-]+)$/;
 export function assertMachO(bytes, arch) {
   const cpu = { arm64: 0x100000c, x64: 0x1000007 }[arch];
   if (
@@ -17,6 +49,19 @@ export function assertMachO(bytes, arch) {
     bytes.readUInt32LE(4) !== cpu
   )
     throw new Error(`Runtime Mach-O architecture mismatch: expected ${arch}`);
+}
+export function assertPE(bytes, arch) {
+  const error = () => {
+    throw new Error(`Runtime PE architecture mismatch: expected ${arch}`);
+  };
+  if (arch !== "x64" || bytes.length < 64 || bytes.readUInt16LE(0) !== 0x5a4d) error();
+  const offset = bytes.readUInt32LE(0x3c);
+  if (
+    offset + 6 > bytes.length ||
+    bytes.readUInt32LE(offset) !== 0x4550 ||
+    bytes.readUInt16LE(offset + 4) !== 0x8664
+  )
+    error();
 }
 const run = (command, args) => {
   const result = spawnSync(command, args, { stdio: "inherit", shell: false });
@@ -56,16 +101,22 @@ export async function preparePrebuiltRuntime(
   { platform = process.platform, arch = process.arch, manifest, downloadArtifact = download } = {},
 ) {
   manifest ??= JSON.parse(await readFile(manifestPath, "utf8"));
-  if (platform !== "darwin" || !["arm64", "x64"].includes(arch))
+  if (!(
+    (platform === "darwin" && ["arm64", "x64"].includes(arch)) ||
+    (platform === "win32" && arch === "x64")
+  ))
     throw new Error(`No prebuilt runtime for ${platform}/${arch}`);
-  const artifact = manifest.artifacts[arch];
+  const windows = platform === "win32";
+  const target = windows ? `windows-${arch}` : arch;
+  const artifact = manifest.artifacts[target];
   if (
     !artifact ||
     !/^[a-f0-9]{64}$/.test(artifact.sha256) ||
-    artifact.file !== `clipseek-runtime-macos-${arch}.tgz`
+    artifact.file !== `clipseek-runtime-${windows ? "windows" : "macos"}-${arch}.tgz`
   )
     throw new Error(`Missing pinned runtime for ${arch}`);
-  const cache = path.join(root, ".cache", "prebuilt-runtime", manifest.tag, arch);
+  manifest = { ...manifest, tag: artifact.tag ?? manifest.tag };
+  const cache = path.join(root, ".cache", "prebuilt-runtime", manifest.tag, target);
   await mkdir(cache, { recursive: true });
   const archive = path.join(cache, artifact.file);
   const verified = async () => {
@@ -88,23 +139,23 @@ export async function preparePrebuiltRuntime(
       throw new Error("Runtime archive SHA-256 mismatch; refusing extraction");
     }
   }
-  const listing = spawnSync("tar", ["-tzf", archive], { encoding: "utf8" });
-  const names = listing.stdout?.trim().split("\n") ?? [];
+  const listing = spawnSync(tarCommand, ["-tzf", archive], { encoding: "utf8" });
+  const names = listing.stdout?.trim().split(/\r?\n/) ?? [];
 
   if (listing.status !== 0 || !names.length || names.some((name) => !runtimeFilePattern.test(name)))
     throw new Error("Unexpected runtime archive contents");
-  const details = spawnSync("tar", ["-tvzf", archive], { encoding: "utf8" });
+  const details = spawnSync(tarCommand, ["-tvzf", archive], { encoding: "utf8" });
   if (
     details.status !== 0 ||
     details.stdout
       .trim()
-      .split("\n")
+      .split(/\r?\n/)
       .some((line) => !line.startsWith("-"))
   )
     throw new Error("Runtime archive must contain regular files only");
   const staging = await mkdtemp(path.join(cache, "verified-"));
   try {
-    run("tar", ["-xzf", archive, "-C", staging]);
+    run(tarCommand, ["-xzf", archive, "-C", staging]);
     const info = JSON.parse(await readFile(path.join(staging, "versions.json"), "utf8"));
     if (
       info.platform !== platform ||
@@ -114,12 +165,21 @@ export async function preparePrebuiltRuntime(
       info.ffprobe !== manifest.ffmpeg
     )
       throw new Error("Runtime version or platform mismatch");
-    for (const name of binaries) assertMachO(await readFile(path.join(staging, name)), arch);
+    const executableNames = windows
+      ? ["ffmpeg.exe", "ffprobe.exe", "heif-decoder.exe"]
+      : ["ffmpeg", "ffprobe"];
+    const required = windows ? [...executableNames, ...windowsRuntimeDlls] : binaries;
+    for (const name of required) {
+      const bytes = await readFile(path.join(staging, name));
+      if (windows) assertPE(bytes, arch);
+      else assertMachO(bytes, arch);
+    }
     const output = path.join(root, "runtime");
     await mkdir(output, { recursive: true });
     for (const name of await readdir(staging))
       await cp(path.join(staging, name), path.join(output, name));
-    for (const name of ["ffmpeg", "ffprobe"]) await chmod(path.join(output, name), 0o755);
+    for (const name of executableNames) await chmod(path.join(output, name), 0o755);
+    if (windows) await stageWindowsAppLocalFiles(root);
   } finally {
     await rm(staging, { recursive: true, force: true });
   }

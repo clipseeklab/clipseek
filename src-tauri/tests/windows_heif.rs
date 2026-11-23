@@ -85,7 +85,7 @@ fn import_preview_embedding_search_and_reopen_preserve_complete_image() {
         std::slice::from_ref(&source),
         None,
         &AtomicBool::new(false),
-        import::ImportMode::Copy,
+        import::ImportMode::Reference,
         &|_, _, _| {},
         &|_| {},
     );
@@ -105,6 +105,11 @@ fn import_preview_embedding_search_and_reopen_preserve_complete_image() {
         .items
         .remove(0)
     };
+    assert_eq!(asset.storage, "reference");
+    assert_eq!(
+        std::fs::canonicalize(&asset.abs_path).unwrap(),
+        std::fs::canonicalize(&source).unwrap()
+    );
     assert_eq!((asset.width, asset.height), (Some(2560), Some(1440)));
     assert_eq!(std::fs::read(&asset.abs_path).unwrap(), original);
     assert_eq!(std::fs::read(&source).unwrap(), original);

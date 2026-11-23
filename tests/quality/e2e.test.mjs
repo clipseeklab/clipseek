@@ -44,6 +44,8 @@ test("automation uses a separate application identifier and never extends produc
   const capabilities = await json("src-tauri/capabilities/default.json");
   assert.notEqual(automation.identifier, production.identifier);
   assert.equal(automation.identifier, "org.clipstudio.open.e2e");
+  assert.equal(production.build.frontendDist, "../dist");
+  assert.equal(automation.build.frontendDist, "../dist-e2e");
   assert(!capabilities.permissions.some((permission) => /wdio/.test(permission)));
   assert(automation.app.security.capabilities[0].permissions.includes("wdio:default"));
   const cargo = await readFile("src-tauri/Cargo.toml", "utf8");
@@ -53,4 +55,24 @@ test("automation uses a separate application identifier and never extends produc
   const entry = await readFile("src-tauri/src/lib.rs", "utf8");
   assert.match(entry, /cfg\(all\(feature = "e2e", not\(debug_assertions\)\)\)/);
   assert.match(entry, /compile_error!\("The e2e automation feature must never/);
+});
+
+test("native E2E resolves platform-specific executables and preserves npm argument boundaries", async () => {
+  const { automationBinary, npmInvocation } = await import("../../scripts/e2e/platform.mjs");
+  assert.equal(path.basename(automationBinary("project", "win32")), "clipstudio-open.exe");
+  assert.equal(path.basename(automationBinary("project", "darwin")), "clipstudio-open");
+  assert.throws(() => automationBinary("project", "linux"), /not supported/);
+  const args = ["exec", "--", "wdio", "run", "path with spaces/config.mjs"];
+  const invocation = npmInvocation(args, { npm_execpath: "path with spaces/npm-cli.js" }, "node");
+  assert.deepEqual(invocation, { command: "node", args: ["path with spaces/npm-cli.js", ...args] });
+  assert.throws(() => npmInvocation(args, {}), /through npm run/);
+});
+
+test("Windows sandbox paths match Rust canonical paths without relaxing isolation checks", async () => {
+  const { sandboxPath } = await import("../../scripts/e2e/platform.mjs");
+  assert.equal(
+    sandboxPath("C:\\Users\\tester\\test root", "win32"),
+    "\\\\?\\C:\\Users\\tester\\test root",
+  );
+  assert.equal(sandboxPath("/private/tmp/test-root", "darwin"), "/private/tmp/test-root");
 });

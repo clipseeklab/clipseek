@@ -17,6 +17,20 @@
       "webviewInstallMode": {
         "type": "downloadBootstrapper"
       }
+    },
+    "resources": {
+      "../.local/windows-runtime/MSVCP140.dll": "MSVCP140.dll",
+      "../.local/windows-runtime/MSVCP140_1.dll": "MSVCP140_1.dll",
+      "../.local/windows-runtime/VCRUNTIME140.dll": "VCRUNTIME140.dll",
+      "../.local/windows-runtime/VCRUNTIME140_1.dll": "VCRUNTIME140_1.dll",
+      "../.local/windows-runtime/DirectML.dll": "DirectML.dll",
+      "../.local/windows-runtime/dxcompiler.dll": "dxcompiler.dll",
+      "../.local/windows-runtime/dxil.dll": "dxil.dll",
+      "../.local/windows-runtime/heif-decoder.exe": "heif-decoder.exe",
+      "../.local/windows-runtime/heif.dll": "heif.dll",
+      "../.local/windows-runtime/libde265.dll": "libde265.dll",
+      "../.local/windows-runtime/heif-libheif-COPYING": "licenses/libheif-COPYING",
+      "../.local/windows-runtime/heif-libde265-COPYING": "licenses/libde265-COPYING"
     }
   }
 }

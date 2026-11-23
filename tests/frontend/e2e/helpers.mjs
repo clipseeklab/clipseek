@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import { browser, $ } from "@wdio/globals";
 
 // Use the same native entry point as core.invoke; WDIO's global wrapper drops headers.
@@ -85,7 +86,7 @@ export async function createLibrary(name) {
   const input = await $('[role="dialog"] input[placeholder="e.g. My Design Assets"]');
   await input.waitForDisplayed();
   await input.setValue(name);
-  const parent = `${process.env.CLIPSEEK_E2E_ROOT}/libraries`;
+  const parent = path.join(process.env.CLIPSEEK_E2E_ROOT, "libraries");
   await dialogResult(parent);
   await click("Choose Directory");
   await browser.waitUntil(

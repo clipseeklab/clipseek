@@ -29,13 +29,13 @@ npm ci
 npm run desktop
 ```
 
-The first run downloads checksum-pinned macOS native dependencies. For private repositories, use an authenticated GitHub CLI with `CLIPSEEK_RUNTIME_USE_GH=1`. Use `npm run desktop:build` to build locally, or follow the [installer guide](docs/releases.md) for on-demand macOS Apple Silicon / Intel GitHub Actions builds. Windows packaging is currently disabled. Ordinary commits do not trigger installer builds.
+The first run downloads checksum-pinned macOS or Windows x64 native dependencies. For private repositories, use an authenticated GitHub CLI with `CLIPSEEK_RUNTIME_USE_GH=1`. Use `npm run desktop:build` to build locally, or follow the [installer guide](docs/releases.md) for on-demand macOS Apple Silicon / Intel and Windows x64 GitHub Actions builds. Ordinary commits do not trigger installer builds.
 
 ## Contributing
 
 [Issues](https://github.com/clipseeklab/clipseek/issues) and pull requests are welcome. See [testing](docs/testing.md), [coding guidelines](docs/coding-standards.md), and [architecture](docs/architecture.md). Keep credentials, personal media, libraries, models, and build artifacts out of commits.
 
-Apple Silicon has been tested locally. Intel Mac and Windows still need installer and hardware validation. See [inference notes](docs/inference.md) for accuracy and performance limits.
+Apple Silicon and Windows x64 have been tested locally. Intel Mac still needs installation and hardware validation on macOS 14+. See [inference notes](docs/inference.md) for accuracy and performance limits.
 
 ## License
 

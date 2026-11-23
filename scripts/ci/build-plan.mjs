@@ -19,6 +19,14 @@ export const targets = [
     target: "x86_64-apple-darwin",
     bundles: "dmg",
   },
+  {
+    id: "windows-x64",
+    os: "windows-2025",
+    platform: "win32",
+    arch: "x64",
+    target: "x86_64-pc-windows-msvc",
+    bundles: "nsis",
+  },
 ];
 
 export function projectVersion(root) {
@@ -61,7 +69,8 @@ export function buildPlan(root, env = process.env) {
     throw new Error(`Release builds require a tag matching v${version}`);
   }
   const platform = release ? "all" : (env.INPUT_PLATFORM ?? "all");
-  if (!["all", "macos"].includes(platform)) throw new Error(`Unknown platform: ${platform}`);
+  if (!["all", "macos", "windows"].includes(platform))
+    throw new Error(`Unknown platform: ${platform}`);
   const include = targets.filter(
     (target) => platform === "all" || target.id.startsWith(`${platform}-`),
   );
