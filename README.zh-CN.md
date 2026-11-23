@@ -1,6 +1,6 @@
 # ClipSeek Open
 
-[English](README.md) · 简体中文 · [官网](https://clipseek.ai)
+[English](README.md) · 简体中文
 
 用自然语言或图片搜索本地照片和视频。素材处理在本机完成，无需账号或云服务。
 

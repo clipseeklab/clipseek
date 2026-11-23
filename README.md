@@ -1,6 +1,6 @@
 # ClipSeek Open
 
-English · [简体中文](README.zh-CN.md) · [Website](https://clipseek.ai)
+English · [简体中文](README.zh-CN.md)
 
 Search local photos and videos with natural language or an image. Processing runs on your computer, without an account or cloud service.
 
