@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
+import { Buffer } from "node:buffer";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, realpathSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { canonicalSandboxPath } from "../../scripts/e2e/platform.mjs";
+import { canonicalSandboxPath } from "../../../scripts/e2e/platform.mjs";
 
 test("Windows short-path aliases resolve to the original full sandbox directory", (t) => {
   assert.equal(process.platform, "win32", "Run this regression test on native Windows");

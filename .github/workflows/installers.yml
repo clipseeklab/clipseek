@@ -113,7 +113,7 @@ jobs:
           --test windows_webview2 -- --test-threads=2
       - name: Test native Windows sandbox path resolution
         if: matrix.platform == 'win32'
-        run: node --test tests/windows/e2e-path.test.mjs
+        run: node --test tests/quality/windows/e2e-path.test.mjs
       - name: Run native desktop E2E
         run: npm run test:e2e
       - name: Remove installers left in the dependency cache
